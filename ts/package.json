@@ -1,0 +1,27 @@
+{
+  "name": "claude-ts-mcps",
+  "type": "module",
+  "note": {
+    "reference": "https://modelcontextprotocol.io/quickstart/server"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/diff": "^7.0.1",
+    "@types/node": "^22.13.10"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.7.0",
+    "diff": "^7.0.0",
+    "minimatch": "^10.0.1",
+    "puppeteer": "^22.3.0",
+    "zod": "^3.24.2"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "prettier": {
+    "singleQuote": true,
+    "trailingComma": "all",
+    "semi": false
+  }
+}

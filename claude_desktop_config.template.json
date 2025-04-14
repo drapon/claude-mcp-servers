@@ -1,0 +1,77 @@
+{
+  "mcpServers": {
+    "brave-search": {
+      "command": "{{BUN_PATH}}",
+      "args": ["run", "{{PROJECT_ROOT}}/ts/src/brave-search.ts"],
+      "env": {
+        "BRAVE_API_KEY": "{{BRAVE_API_KEY}}"
+      },
+      "autoApprove": ["brave_local_search", "brave_web_search"]
+    },
+    "filesystem": {
+      "command": "{{BUN_PATH}}",
+      "args": ["run", "{{PROJECT_ROOT}}/ts/src/filesystem.ts", "{{HOME_DIR}}"]
+    },
+    "git": {
+      "command": "{{BUN_PATH}}",
+      "args": ["run", "{{PROJECT_ROOT}}/ts/src/git.ts"]
+    },
+    "github": {
+      "command": "{{BUN_PATH}}",
+      "args": ["run", "{{PROJECT_ROOT}}/ts/src/github.ts"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "{{GITHUB_TOKEN}}"
+      }
+    },
+    "shell": {
+      "command": "{{BUN_PATH}}",
+      "args": ["run", "{{PROJECT_ROOT}}/ts/src/shell.ts"]
+    },
+    "puppeteer": {
+      "command": "{{BUN_PATH}}",
+      "args": ["run", "{{PROJECT_ROOT}}/ts/src/puppeteer.ts"]
+    },
+    "fetch": {
+      "command": "{{BUN_PATH}}",
+      "args": ["run", "{{PROJECT_ROOT}}/ts/src/fetch.ts"],
+      "env": {
+        "CUSTOM_USER_AGENT": "{{CUSTOM_USER_AGENT}}",
+        "IGNORE_ROBOTS_TXT": "{{IGNORE_ROBOTS_TXT}}"
+      }
+    },
+    "claude_code": {
+      "command": "{{CLAUDE_CLI_PATH}}",
+      "args": ["mcp", "serve"],
+      "env": {}
+    },
+    "awslabs.aws-documentation-mcp-server": {
+      "command": "{{UVX_PATH}}",
+      "args": ["awslabs.aws-documentation-mcp-server@latest"],
+      "env": {
+        "FASTMCP_LOG_LEVEL": "ERROR"
+      },
+      "disabled": false,
+      "autoApprove": []
+    },
+    "supabase": {
+      "command": "{{NPX_PATH}}",
+      "args": [
+        "-y",
+        "@supabase/mcp-server-supabase@latest",
+        "--access-token",
+        "{{SUPABASE_API_KEY}}"
+      ]
+    },
+    "figma-developer-mcp": {
+      "command": "{{NPX_PATH}}",
+      "args": ["-y", "figma-developer-mcp", "--stdio"],
+      "env": {
+        "FIGMA_API_KEY": "{{FIGMA_API_KEY}}"
+      }
+    },
+    "obsidian": {
+      "command": "{{BUN_PATH}}",
+      "args": ["run", "{{PROJECT_ROOT}}/ts/src/obsidian.ts", "{{OBSIDIAN_VAULT_DIR}}"]
+    }
+  }
+}

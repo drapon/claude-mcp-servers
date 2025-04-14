@@ -1,0 +1,17 @@
+{
+  "name": "claude-mcp-servers",
+  "version": "1.0.0",
+  "description": "Root package for managing scripts and dependencies for MCP servers.",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "generate-config": "bun run scripts/generate-config.mjs",
+    "setup": "make setup"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5"
+  },
+  "engines": {
+    "bun": ">=1.0.0"
+  }
+}
