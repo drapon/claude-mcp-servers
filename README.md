@@ -67,8 +67,8 @@
 3. **依存関係をインストールして設定します:**
 
    ```bash
-   # インタラクティブなセットアップ（推奨）
-   make setup-interactive
+   # MCPサーバーを選択的に有効化する（推奨）
+   make select-mcps
    
    # または、従来の自動セットアップ
    make setup
@@ -77,7 +77,7 @@
    これにより、以下の処理が行われます:
 
    - ルートディレクトリと`ts`ディレクトリの依存関係がインストールされます
-   - インタラクティブセットアップの場合:
+   - `select-mcps`を使用した場合:
      - 有効にするMCPサーバーを選択できます
      - 必要な環境変数を対話的に入力できます
    - `claude_desktop_config.template.json` と `.env` ファイルから `claude_desktop_config.json` ファイルが生成されます
@@ -91,7 +91,7 @@
 
 - `make all` または `make`: デフォルトターゲット。`setup` ターゲットを実行します
 - `make setup`: 依存関係をインストールし、設定ファイルを生成して Claude デスクトップアプリの設定ディレクトリにコピーします
-- `make setup-interactive`: インタラクティブな設定ウィザードを実行します。MCPの有効/無効の選択や必要な環境変数の設定ができます
+- `make select-mcps`: インタラクティブにMCPサーバーを選択して設定します。必要な環境変数の設定も行えます
 - `make install`: 依存関係のみをインストールします
 - `make clean`: 生成された `claude_desktop_config.json` ファイルを削除します
 
@@ -107,7 +107,7 @@
 
 - **.env**: 環境固有の値とシークレットをここで定義します
 - **claude_desktop_config.template.json**: 機能設定のテンプレートを必要に応じて変更します
-- **インタラクティブセットアップ**: `make setup-interactive` を使用して、使用したいMCPサーバーのみを有効にできます
+- **インタラクティブ選択**: `make select-mcps` を使用して、使用したいMCPサーバーのみを有効にできます
 
 ## Obsidian 機能の使用方法
 

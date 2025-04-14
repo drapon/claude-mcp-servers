@@ -16,9 +16,9 @@ install:
 	@cd ts && bun install
 	@echo "All dependencies installed."
 
-# Interactive setup target
-setup-interactive: install
-	@echo "Running interactive setup..."
+# Interactive setup target with MCP selection
+select-mcps: install
+	@echo "Running interactive MCP selection..."
 	@bun run scripts/setup-config.mjs
 	@echo "Copying $(CONFIG_FILE) to $(DEST_DIR)..."
 	@mkdir -p $(DEST_DIR) # Ensure destination directory exists
@@ -43,4 +43,4 @@ clean:
 	@rm -f $(CONFIG_FILE)
 
 # Phony targets prevent conflicts with files of the same name
-.PHONY: all setup setup-interactive install clean
+.PHONY: all setup select-mcps install clean
