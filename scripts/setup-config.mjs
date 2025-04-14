@@ -48,16 +48,17 @@ async function setupConfig() {
       }
     ]);
     
-    // 5. Update template based on selections
-    const updatedTemplate = JSON.parse(JSON.stringify(templateJson)); // Deep clone
+    // 5. Create a new template with only selected MCPs
+    const updatedTemplate = {
+      mcpServers: {}
+    };
     
-    mcpServers.forEach(server => {
-      if (!serverSelections.enabledMcps.includes(server)) {
-        // Disable MCPs that were not selected
-        updatedTemplate.mcpServers[server].disabled = true;
-      } else if (updatedTemplate.mcpServers[server].disabled) {
-        // Enable MCPs that were selected but were previously disabled
-        updatedTemplate.mcpServers[server].disabled = false;
+    // Only include selected MCP servers in the updated template
+    serverSelections.enabledMcps.forEach(server => {
+      updatedTemplate.mcpServers[server] = JSON.parse(JSON.stringify(templateJson.mcpServers[server]));
+      // Remove any disabled flag from selected servers
+      if (updatedTemplate.mcpServers[server].disabled) {
+        delete updatedTemplate.mcpServers[server].disabled;
       }
     });
     
