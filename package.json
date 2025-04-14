@@ -9,9 +9,14 @@
     "setup": "make setup"
   },
   "dependencies": {
-    "dotenv": "^16.4.5"
+    "dotenv": "^16.4.5",
+    "inquirer": "^12.5.2",
+    "minimist": "^1.2.8"
   },
   "engines": {
     "bun": ">=1.0.0"
+  },
+  "devDependencies": {
+    "@types/inquirer": "^9.0.7"
   }
 }

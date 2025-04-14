@@ -16,8 +16,16 @@ install:
 	@cd ts && bun install
 	@echo "All dependencies installed."
 
-# Target to generate config and copy it
-# Ensures the config file is generated before attempting to copy
+# Interactive setup target
+setup-interactive: install
+	@echo "Running interactive setup..."
+	@bun run scripts/setup-config.mjs
+	@echo "Copying $(CONFIG_FILE) to $(DEST_DIR)..."
+	@mkdir -p $(DEST_DIR) # Ensure destination directory exists
+	@cp $(CONFIG_FILE) $(DEST_DIR)/
+	@echo "Setup complete. You may need to restart the Claude Desktop app."
+
+# Standard setup target
 setup: install $(CONFIG_FILE)
 	@echo "Copying $(CONFIG_FILE) to $(DEST_DIR)..."
 	@mkdir -p $(DEST_DIR) # Ensure destination directory exists
@@ -35,4 +43,4 @@ clean:
 	@rm -f $(CONFIG_FILE)
 
 # Phony targets prevent conflicts with files of the same name
-.PHONY: all setup install clean
+.PHONY: all setup setup-interactive install clean
