@@ -109,6 +109,87 @@ async function findShadcnConfig(
   return null
 }
 
+// Helper function to find tailwind config in a project
+async function findTailwindConfig(
+  projectPathParam?: string,
+): Promise<{ configPath: string; projectPath: string } | null> {
+  // 1. If projectPath is explicitly provided, check there first
+  if (projectPathParam) {
+    const configPath = path.join(projectPathParam, 'tailwind.config.js')
+    try {
+      await fs.access(configPath)
+      return { configPath, projectPath: projectPathParam }
+    } catch (error) {
+      console.error(`No tailwind.config.js found at ${configPath}`)
+    }
+  }
+
+  // 2. Check if config is specified via environment variable
+  if (process.env.SHADCN_TAILWIND_PATH) {
+    try {
+      await fs.access(process.env.SHADCN_TAILWIND_PATH)
+      const projectPath = path.dirname(process.env.SHADCN_TAILWIND_PATH)
+      return { configPath: process.env.SHADCN_TAILWIND_PATH, projectPath }
+    } catch (error) {
+      console.error(`Cannot access config at ${process.env.SHADCN_TAILWIND_PATH}`)
+    }
+  }
+
+  // 3. Try to find components.json first, which might have tailwind config path
+  const shadcnConfig = await findShadcnConfig(projectPathParam)
+  if (shadcnConfig) {
+    try {
+      // Read components.json to get tailwind config path
+      const componentsJson = JSON.parse(
+        await fs.readFile(shadcnConfig.configPath, 'utf-8')
+      )
+      
+      if (componentsJson.tailwind && componentsJson.tailwind.config) {
+        // Resolve the path relative to the components.json location
+        const tailwindConfigPath = path.join(
+          path.dirname(shadcnConfig.configPath),
+          componentsJson.tailwind.config
+        )
+        
+        try {
+          await fs.access(tailwindConfigPath)
+          return { configPath: tailwindConfigPath, projectPath: shadcnConfig.projectPath }
+        } catch (error) {
+          console.error(`Found tailwind path in components.json but cannot access at ${tailwindConfigPath}`)
+        }
+      }
+    } catch (error) {
+      console.error(`Error parsing components.json: ${error}`)
+    }
+  }
+
+  // 4. Try to find config in current working directory or parent directories
+  let currentDir = projectPathParam || process.cwd()
+  const rootDir = path.parse(currentDir).root
+
+  while (currentDir !== rootDir) {
+    const configPath = path.join(currentDir, 'tailwind.config.js')
+    try {
+      await fs.access(configPath)
+      return { configPath, projectPath: currentDir }
+    } catch (error) {
+      // Try alternate filenames
+      const altConfigPath = path.join(currentDir, 'tailwind.config.ts')
+      try {
+        await fs.access(altConfigPath)
+        return { configPath: altConfigPath, projectPath: currentDir }
+      } catch (altError) {
+        // Config not found in this directory, try parent
+        currentDir = path.dirname(currentDir)
+      }
+    }
+  }
+
+  // 5. If no config found, return null
+  console.warn('No tailwind.config.js found, will use default design tokens')
+  return null
+}
+
 // Helper to load component information
 async function getComponentInfo(
   name: string,
@@ -283,19 +364,8 @@ async function getRelatedComponents(name: string) {
   return []
 }
 
-// Helper function to extract design tokens from tailwind config
-async function getDesignTokens(category: string, projectPath?: string) {
-  // Create cache key
-  const cacheKey = `${projectPath || 'default'}_${category}`
-
-  // Check cache first
-  if (designTokenCache.has(cacheKey)) {
-    return designTokenCache.get(cacheKey)
-  }
-
-  // In a real implementation, you would parse the tailwind.config.js file
-  // For now, we'll return sample data based on the standard shadcn/ui theme
-
+// Helper function to get default design tokens
+function getDefaultDesignTokens(category: string) {
   const allTokens = {
     colors: {
       border: 'hsl(var(--border))',
@@ -396,11 +466,53 @@ async function getDesignTokens(category: string, projectPath?: string) {
   }
 
   // Return requested category or all
-  let result: Record<string, any>
   if (category === 'all') {
-    result = allTokens
+    return allTokens
   } else {
-    result = { [category]: allTokens[category as keyof typeof allTokens] }
+    return { [category]: allTokens[category as keyof typeof allTokens] }
+  }
+}
+
+// Mock function for parsing tailwind config (in a real implementation, this would actually parse the JS/TS file)
+async function parseTailwindConfig(configPath: string, category: string) {
+  // In a real implementation, this would actually read and parse the tailwind.config.js file
+  // For now, we'll log that we're trying to parse the file, but return default values
+  console.log(`[Mock] Parsing tailwind config at: ${configPath} for category: ${category}`)
+  
+  // Just return default values for this mock implementation
+  return getDefaultDesignTokens(category)
+}
+
+// Helper function to extract design tokens from tailwind config
+async function getDesignTokens(category: string, projectPath?: string) {
+  // Create cache key
+  const cacheKey = `${projectPath || 'default'}_${category}`
+
+  // Check cache first
+  if (designTokenCache.has(cacheKey)) {
+    return designTokenCache.get(cacheKey)
+  }
+
+  // Try to find and parse tailwind config
+  const configInfo = await findTailwindConfig(projectPath)
+  
+  let result: Record<string, any>
+
+  if (configInfo) {
+    try {
+      // Found a tailwind config - try to parse it
+      result = await parseTailwindConfig(configInfo.configPath, category)
+      console.log(`Using tailwind config from: ${configInfo.configPath}`)
+    } catch (error) {
+      // Error parsing config - fall back to defaults
+      console.error(`Error parsing tailwind config: ${error}`)
+      console.log('Falling back to default design tokens')
+      result = getDefaultDesignTokens(category)
+    }
+  } else {
+    // No tailwind config found - use defaults
+    console.log('No tailwind.config.js found - using default design tokens')
+    result = getDefaultDesignTokens(category)
   }
 
   // Cache the result
@@ -712,14 +824,26 @@ async function runServer() {
   console.error(
     `- SHADCN_CONFIG_PATH: ${process.env.SHADCN_CONFIG_PATH || 'not set'}`,
   )
+  console.error(
+    `- SHADCN_TAILWIND_PATH: ${process.env.SHADCN_TAILWIND_PATH || 'not set'}`,
+  )
 
   // Try to find shadcn config
   const configInfo = await findShadcnConfig()
   if (configInfo) {
     console.error(`- Found shadcn/ui config at: ${configInfo.configPath}`)
     console.error(`- Project path: ${configInfo.projectPath}`)
+    
+    // Try to find tailwind config
+    const tailwindConfigInfo = await findTailwindConfig(configInfo.projectPath)
+    if (tailwindConfigInfo) {
+      console.error(`- Found tailwind config at: ${tailwindConfigInfo.configPath}`)
+    } else {
+      console.error('- No tailwind.config.js found, will use default design tokens')
+    }
   } else {
     console.error('- No shadcn/ui config found in current directory or parents')
+    console.error('- Using default component information and design tokens')
   }
 }
 
