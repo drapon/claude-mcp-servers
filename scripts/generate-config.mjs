@@ -6,8 +6,8 @@ import minimist from "minimist";
 const args = minimist(process.argv.slice(2));
 const projectRoot = process.cwd();
 // Allow custom template path if specified via --template flag
-const templatePath = args.template 
-  ? args.template 
+const templatePath = args.template
+  ? args.template
   : path.join(projectRoot, "claude_desktop_config.template.json");
 const configPath = path.join(projectRoot, "claude_desktop_config.json");
 const envPath = path.join(projectRoot, ".env");
@@ -32,7 +32,9 @@ async function generateConfig() {
       if (Object.hasOwnProperty.call(envConfig, key)) {
         const value = envConfig[key];
         // Escape backslashes and double quotes for JSON string compatibility
-        const escapedValue = value.replace(/\\\\/g, "\\\\\\\\").replace(/\"/g, '\\\\"');
+        const escapedValue = value
+          .replace(/\\\\/g, "\\\\\\\\")
+          .replace(/\"/g, '\\\\"');
         const placeholder = `{{${key}}}`;
         // Use a regex with global flag to replace all occurrences
         templateContent = templateContent.replace(
