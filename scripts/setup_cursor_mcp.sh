@@ -51,7 +51,7 @@ read -p "Enter your default Cursor workspace path (or leave empty): " CURSOR_WOR
 sed -e "s|{{BUN_PATH}}|$BUN_PATH|g" \
     -e "s|{{HOME_DIR}}|$HOME_DIR|g" \
     -e "s|{{PROJECT_ROOT}}|$PROJECT_ROOT|g" \
-    -e "s|{{OBSIDIAN_VAULT_DIR}}|\"$OBSIDIAN_VAULT_DIR\"|g" \
+    -e "s|{{OBSIDIAN_VAULT_DIR}}|$OBSIDIAN_VAULT_DIR|g" \
     -e "s|{{BRAVE_API_KEY}}|$BRAVE_API_KEY|g" \
     -e "s|{{GITHUB_TOKEN}}|$GITHUB_TOKEN|g" \
     -e "s|{{SUPABASE_API_KEY}}|$SUPABASE_API_KEY|g" \
