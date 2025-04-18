@@ -21,7 +21,6 @@
 - **AWS Documentation**: AWS 関連情報の検索
 - **Supabase**: データベース連携
 - **Obsidian**: Obsidian ノートの操作
-- **Cursor統合**: Cursor IDEとの統合機能 (Cursorのみ)
 
 ## 前提条件
 
@@ -160,30 +159,6 @@ read_notes({"paths": ["Projects/新しいプロジェクト", "Daily/2025-04-12"
 delete_note({"path": "Projects/古いプロジェクト"})
 ```
 
-## Cursor統合機能の使用方法
-
-Cursor IDE専用の統合機能は、Cursorのワークスペース情報を取得してAIに提供する機能などを持ちます。この機能は以下のツールを提供します：
-
-1. **get_project_info**: Cursorプロジェクトの情報を取得します
-   - `workspace_path`: Cursorのワークスペースパス（オプション、未指定の場合は環境変数から取得）
-
-2. **get_active_file**: 現在アクティブなファイルを取得します
-   - `workspace_path`: Cursorのワークスペースパス（オプション）
-
-3. **index_workspace**: ワークスペースをインデックス化します
-   - `workspace_path`: Cursorのワークスペースパス（オプション）
-   - `exclude_patterns`: インデックス化から除外するパターンの配列（オプション）
-
-例：
-
-```
-// プロジェクト情報を取得する
-get_project_info({})
-
-// ワークスペースをインデックス化する（node_modules等を除外）
-index_workspace({"exclude_patterns": ["node_modules", "dist", ".git"]})
-```
-
 ## MCP の開発と拡張
 
 このリポジトリに新しい MCP を追加する方法：
@@ -223,7 +198,6 @@ index_workspace({"exclude_patterns": ["node_modules", "dist", ".git"]})
 - `.env` ファイルのパスが正しいことを確認してください
 - `bun` コマンドが機能していることを確認してください
 - Obsidian 機能の場合、`OBSIDIAN_VAULT_DIR`が正しく設定されていることを確認してください
-- Cursor統合機能の場合、`CURSOR_WORKSPACE_PATH`が正しく設定されていることを確認してください
 - インタラクティブセットアップ中に問題が発生した場合は、`make setup`を使用して従来の方法でセットアップしてみてください
 - Cursor IDEの設定に問題がある場合は、Cursorの設定画面でMCPの設定パスが正しく指定されているか確認してください
 

@@ -80,13 +80,6 @@
       "command": "{{BUN_PATH}}",
       "args": ["run", "{{PROJECT_ROOT}}/ts/src/shadcn-ui.ts"],
       "env": {}
-    },
-    "cursor-integration": {
-      "command": "{{BUN_PATH}}",
-      "args": ["run", "{{PROJECT_ROOT}}/ts/src/cursor-integration.ts"],
-      "env": {
-        "CURSOR_WORKSPACE_PATH": "{{CURSOR_WORKSPACE_PATH}}"
-      }
     }
   }
 }
