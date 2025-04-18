@@ -1,14 +1,14 @@
 # Claude 拡張機能設定ツール
 
-このリポジトリは、Claude デスクトップアプリの機能拡張設定を管理するためのツールです。
+このリポジトリは、Claude デスクトップアプリおよびCursor IDEの機能拡張設定を管理するためのツールです。
 
 ## 概要
 
-`Makefile` を使用して、テンプレート (`claude_desktop_config.template.json`) と `.env` ファイルから設定ファイル (`claude_desktop_config.json`) を自動生成し、Claude デスクトップアプリの設定ディレクトリにインストールします。
+`Makefile` を使用して、テンプレート (`claude_desktop_config.template.json`または`cursor_config.template.json`) と `.env` ファイルから設定ファイル (`claude_desktop_config.json`または`config.json`) を自動生成し、Claude デスクトップアプリまたはCursor IDEの設定ディレクトリにインストールします。
 
 ## 対応している機能
 
-このリポジトリは以下の機能を Claude デスクトップアプリで利用できるようにします：
+このリポジトリは以下の機能を Claude デスクトップアプリとCursor IDEで利用できるようにします：
 
 - **Brave 検索**: Web 検索および地域検索
 - **ファイルシステム**: ローカルファイルの操作
@@ -21,12 +21,13 @@
 - **AWS Documentation**: AWS 関連情報の検索
 - **Supabase**: データベース連携
 - **Obsidian**: Obsidian ノートの操作
+- **Cursor統合**: Cursor IDEとの統合機能 (Cursorのみ)
 
 ## 前提条件
 
 - [Bun](https://bun.sh/)がインストールされていること
 - システムに `make` がインストールされていること
-- Claude デスクトップアプリがインストールされていること
+- Claude デスクトップアプリまたはCursor IDEがインストールされていること
 - [uvx](https://uvy.io/)がインストールされていること（AWS Documentation 機能を使用する場合）
 
 ## セットアップ
@@ -58,6 +59,7 @@
    # Directories
    HOME_DIR=/your/home/directory            # ホームディレクトリのパス
    OBSIDIAN_VAULT_DIR=/path/to/obsidian/vault  # Obsidianのvaultディレクトリ
+   CURSOR_WORKSPACE_PATH=/path/to/workspace    # Cursorのワークスペースパス (Cursor用)
 
    # Fetch Tool Configuration
    CUSTOM_USER_AGENT=Mozilla/5.0 (...)      # カスタムユーザーエージェント設定
@@ -66,6 +68,7 @@
 
 3. **依存関係をインストールして設定します:**
 
+   **Claude Desktop用の場合:**
    ```bash
    # MCPサーバーを選択的に有効化する（推奨）
    make select-mcps
@@ -74,18 +77,24 @@
    make setup
    ```
 
+   **Cursor IDE用の場合:**
+   ```bash
+   # Cursor用のMCPサーバーを設定
+   ./scripts/setup_cursor_mcp.sh
+   ```
+
    これにより、以下の処理が行われます:
 
    - ルートディレクトリと`ts`ディレクトリの依存関係がインストールされます
    - `select-mcps`を使用した場合:
      - 有効にするMCPサーバーを選択できます
      - 必要な環境変数を対話的に入力できます
-   - `claude_desktop_config.template.json` と `.env` ファイルから `claude_desktop_config.json` ファイルが生成されます
-   - 生成された設定ファイルが Claude デスクトップアプリの設定ディレクトリにコピーされます
+   - テンプレートファイル（`claude_desktop_config.template.json`または`cursor_config.template.json`）と `.env` ファイルから設定ファイルが生成されます
+   - 生成された設定ファイルが適切な設定ディレクトリにコピーされます
 
-4. **Claude デスクトップアプリを再起動します:**
+4. **アプリケーションを再起動します:**
 
-   変更を反映させるために、Claude デスクトップアプリを再起動してください。
+   変更を反映させるために、Claude デスクトップアプリやCursor IDEを再起動してください。
 
 ## Makefile コマンド
 
@@ -97,16 +106,18 @@
 
 ## 設定ファイル
 
-- `claude_desktop_config.template.json`: 機能設定のテンプレートファイル
+- `claude_desktop_config.template.json`: Claude Desktop用の機能設定のテンプレートファイル
+- `cursor_config.template.json`: Cursor IDE用の機能設定のテンプレートファイル
 - `.env`: 環境変数を定義するファイル（リポジトリには含まれません）
-- `claude_desktop_config.json`: 生成された設定ファイル（リポジトリには含まれません）
+- `claude_desktop_config.json`: Claude Desktop用の生成された設定ファイル（リポジトリには含まれません）
+- `config.json`: Cursor IDE用の生成された設定ファイル（リポジトリには含まれません）
 
 ## カスタマイズ
 
-`.env` ファイルと `claude_desktop_config.template.json` ファイルを変更することで、設定をカスタマイズできます:
+`.env` ファイルとテンプレートファイルを変更することで、設定をカスタマイズできます:
 
 - **.env**: 環境固有の値とシークレットをここで定義します
-- **claude_desktop_config.template.json**: 機能設定のテンプレートを必要に応じて変更します
+- **テンプレートファイル**: 機能設定のテンプレートを必要に応じて変更します
 - **インタラクティブ選択**: `make select-mcps` を使用して、使用したいMCPサーバーのみを有効にできます
 
 ## Obsidian 機能の使用方法
@@ -149,6 +160,30 @@ read_notes({"paths": ["Projects/新しいプロジェクト", "Daily/2025-04-12"
 delete_note({"path": "Projects/古いプロジェクト"})
 ```
 
+## Cursor統合機能の使用方法
+
+Cursor IDE専用の統合機能は、Cursorのワークスペース情報を取得してAIに提供する機能などを持ちます。この機能は以下のツールを提供します：
+
+1. **get_project_info**: Cursorプロジェクトの情報を取得します
+   - `workspace_path`: Cursorのワークスペースパス（オプション、未指定の場合は環境変数から取得）
+
+2. **get_active_file**: 現在アクティブなファイルを取得します
+   - `workspace_path`: Cursorのワークスペースパス（オプション）
+
+3. **index_workspace**: ワークスペースをインデックス化します
+   - `workspace_path`: Cursorのワークスペースパス（オプション）
+   - `exclude_patterns`: インデックス化から除外するパターンの配列（オプション）
+
+例：
+
+```
+// プロジェクト情報を取得する
+get_project_info({})
+
+// ワークスペースをインデックス化する（node_modules等を除外）
+index_workspace({"exclude_patterns": ["node_modules", "dist", ".git"]})
+```
+
 ## MCP の開発と拡張
 
 このリポジトリに新しい MCP を追加する方法：
@@ -170,7 +205,7 @@ delete_note({"path": "Projects/古いプロジェクト"})
    `server.setRequestHandler()` 内でツールの動作を実装します。
 
 4. **設定ファイルへの追加**:
-   `claude_desktop_config.template.json` に新しい MCP の設定を追加します。
+   テンプレートファイル（`claude_desktop_config.template.json`と`cursor_config.template.json`）に新しい MCP の設定を追加します。
 
    ```json
    "my-new-tool": {
@@ -188,7 +223,9 @@ delete_note({"path": "Projects/古いプロジェクト"})
 - `.env` ファイルのパスが正しいことを確認してください
 - `bun` コマンドが機能していることを確認してください
 - Obsidian 機能の場合、`OBSIDIAN_VAULT_DIR`が正しく設定されていることを確認してください
+- Cursor統合機能の場合、`CURSOR_WORKSPACE_PATH`が正しく設定されていることを確認してください
 - インタラクティブセットアップ中に問題が発生した場合は、`make setup`を使用して従来の方法でセットアップしてみてください
+- Cursor IDEの設定に問題がある場合は、Cursorの設定画面でMCPの設定パスが正しく指定されているか確認してください
 
 ## 開発方針
 
