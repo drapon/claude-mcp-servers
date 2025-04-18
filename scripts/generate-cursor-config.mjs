@@ -35,7 +35,7 @@ const replacePlaceholders = (content) => {
     '{{PROJECT_ROOT}}': projectRoot,
     '{{BUN_PATH}}': process.env.BUN_PATH || 'bun',
     '{{HOME_DIR}}': process.env.HOME_DIR || process.env.HOME,
-    '{{OBSIDIAN_VAULT_DIR}}': process.env.OBSIDIAN_VAULT_DIR || '',
+    '{{OBSIDIAN_VAULT_DIR}}': process.env.OBSIDIAN_VAULT_DIR ? JSON.stringify(process.env.OBSIDIAN_VAULT_DIR) : '""',
     '{{BRAVE_API_KEY}}': process.env.BRAVE_API_KEY || '',
     '{{GITHUB_TOKEN}}': process.env.GITHUB_TOKEN || '',
     '{{SUPABASE_API_KEY}}': process.env.SUPABASE_API_KEY || '',
@@ -45,7 +45,7 @@ const replacePlaceholders = (content) => {
     '{{FIGMA_API_KEY}}': process.env.FIGMA_API_KEY || '',
     '{{CUSTOM_USER_AGENT}}': process.env.CUSTOM_USER_AGENT || '',
     '{{IGNORE_ROBOTS_TXT}}': process.env.IGNORE_ROBOTS_TXT || 'false',
-    '{{CURSOR_WORKSPACE_PATH}}': process.env.CURSOR_WORKSPACE_PATH || '',
+    '{{CURSOR_WORKSPACE_PATH}}': process.env.CURSOR_WORKSPACE_PATH ? JSON.stringify(process.env.CURSOR_WORKSPACE_PATH) : '""',
   };
 
   // Replace all placeholders
