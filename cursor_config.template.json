@@ -71,7 +71,10 @@
     },
     "obsidian": {
       "command": "{{BUN_PATH}}",
-      "args": ["run", "{{PROJECT_ROOT}}/ts/src/obsidian.ts", "{{OBSIDIAN_VAULT_DIR}}"]
+      "args": ["run", "{{PROJECT_ROOT}}/ts/src/obsidian.ts"],
+      "env": {
+        "OBSIDIAN_VAULT_DIR": "{{OBSIDIAN_VAULT_DIR}}"
+      }
     },
     "shadcn-ui": {
       "command": "{{BUN_PATH}}",

@@ -10,14 +10,14 @@ import { z } from 'zod'
 import { zodToJsonSchema } from 'zod-to-json-schema'
 
 // Command line argument parsing
-const args = process.argv.slice(2)
-if (args.length === 0) {
-  console.error('Usage: mcp-server-obsidian <obsidian-vault-directory>')
+const obsidianVaultDirArg = process.env.OBSIDIAN_VAULT_DIR || process.argv.slice(2)[0]
+if (!obsidianVaultDirArg) {
+  console.error('Error: No Obsidian vault directory specified. Set OBSIDIAN_VAULT_DIR environment variable or provide as command line argument.')
   process.exit(1)
 }
 
 // Store the Obsidian vault directory
-const obsidianVaultDir = path.resolve(args[0])
+const obsidianVaultDir = path.resolve(obsidianVaultDirArg)
 
 // Verify that the specified directory exists and is accessible
 try {
