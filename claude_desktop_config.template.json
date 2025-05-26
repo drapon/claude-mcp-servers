@@ -80,6 +80,10 @@
       "command": "{{BUN_PATH}}",
       "args": ["run", "{{PROJECT_ROOT}}/ts/src/shadcn-ui.ts"],
       "env": {}
+    },
+    "blender": {
+      "command": "{{UVX_PATH}}",
+      "args": ["blender-mcp"]
     }
   }
 }
