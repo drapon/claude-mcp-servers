@@ -7,6 +7,9 @@ ENV_FILE := .env
 # Ensure the destination path handles spaces correctly if quoted later
 CLAUDE_DEST_DIR := "$(HOME)/Library/Application Support/Claude"
 CURSOR_DEST_DIR := "$(HOME)/.cursor/mcp"
+# Claude Code MCP paths
+DIST_DIR := dist
+BASE_PATH := $(PWD)
 
 # Default target
 all: setup
@@ -65,6 +68,50 @@ clean:
 	@echo "Removing generated config files..."
 	@rm -f $(CONFIG_FILE)
 	@rm -f $(CURSOR_CONFIG_FILE)
+	@rm -rf $(DIST_DIR)
+
+# ==============================================================================
+# Claude Code MCP Management
+# ==============================================================================
+
+# Build individual MCPs for Claude Code
+build-individual-mcps: install
+	@echo "🔨 Building individual MCPs for Claude Code..."
+	@mkdir -p $(DIST_DIR)
+	@echo "📁 Created $(DIST_DIR) directory"
+	@echo "📦 Copying MCP servers to $(DIST_DIR)..."
+	@for file in ts/src/*.ts; do \
+		if [ -f "$$file" ]; then \
+			name=$$(basename "$$file" .ts); \
+			mkdir -p "$(DIST_DIR)/$$name"; \
+			cp "$$file" "$(DIST_DIR)/$$name/index.ts"; \
+			echo "✅ Copied $$name"; \
+		fi; \
+	done
+	@echo "🎉 Individual MCPs prepared successfully!"
+
+# Interactive setup for Claude Code MCPs
+setup-claude-code: build-individual-mcps
+	@echo "🚀 Setting up Claude Code MCPs..."
+	@bun run scripts/setup-claude-code.mjs
+
+# Reset and setup Claude Code MCPs (recommended)
+reset-and-setup-claude-code: build-individual-mcps
+	@echo "🔄 Resetting existing Claude Code MCP configurations..."
+	@bun run scripts/reset-claude-code.mjs
+	@echo "🚀 Setting up new configurations..."
+	@bun run scripts/setup-claude-code.mjs
+
+# Reset Claude Code MCP configurations only
+reset-claude-code:
+	@echo "🔄 Resetting Claude Code MCP configurations..."
+	@bun run scripts/reset-claude-code.mjs
+
+# List current Claude Code MCP servers
+list-claude-code-mcps:
+	@echo "📋 Current Claude Code MCP servers:"
+	@claude mcp list 2>/dev/null || echo "❌ No Claude Code MCPs configured or Claude Code not available"
 
 # Phony targets prevent conflicts with files of the same name
-.PHONY: all setup select-mcps install clean cursor-setup cursor-interactive cursor-config
+.PHONY: all setup select-mcps install clean cursor-setup cursor-interactive cursor-config \
+        build-individual-mcps setup-claude-code reset-and-setup-claude-code reset-claude-code list-claude-code-mcps

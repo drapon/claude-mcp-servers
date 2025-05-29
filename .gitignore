@@ -180,6 +180,9 @@ dist
 # Json
 claude_desktop_config.json
 
+# Claude Code MCP dist
+dist/
+
 # --- Added for Monorepo Structure ---
 
 # TypeScript Server
