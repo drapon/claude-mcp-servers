@@ -1,10 +1,12 @@
 # Claude 拡張機能設定ツール
 
-このリポジトリは、Claude デスクトップアプリおよびCursor IDEの機能拡張設定を管理するためのツールです。
+このリポジトリは、Claude デスクトップアプリ、Cursor IDE、**Claude Code**の機能拡張設定を管理するためのツールです。
 
 ## 概要
 
 `Makefile` を使用して、テンプレート (`claude_desktop_config.template.json`または`cursor_config.template.json`) と `.env` ファイルから設定ファイル (`claude_desktop_config.json`または`config.json`) を自動生成し、Claude デスクトップアプリまたはCursor IDEの設定ディレクトリにインストールします。
+
+**Claude Code向けには、個別MCPサーバーの管理機能も提供します。**
 
 ## 対応している機能
 
@@ -26,15 +28,16 @@
 
 - [Bun](https://bun.sh/)がインストールされていること
 - システムに `make` がインストールされていること
-- Claude デスクトップアプリまたはCursor IDEがインストールされていること
+- Claude デスクトップアプリ、Cursor IDE、または[Claude Code](https://claude.ai/code)がインストールされていること
 - [uvx](https://uvy.io/)がインストールされていること（AWS Documentation 機能を使用する場合）
+- **Claude Code用**: Claude CLIがインストールされていること
 
 ## セットアップ
 
 1. **リポジトリをクローンします:**
 
    ```bash
-   git clone https://github.com/yourusername/claude-ts-mcps.git
+   git clone git@github.com:drapon/claude-mcp-servers.git
    cd claude-ts-mcps
    ```
 
@@ -68,18 +71,36 @@
 3. **依存関係をインストールして設定します:**
 
    **Claude Desktop用の場合:**
+
    ```bash
    # MCPサーバーを選択的に有効化する（推奨）
    make select-mcps
-   
+
    # または、従来の自動セットアップ
    make setup
    ```
 
    **Cursor IDE用の場合:**
+
    ```bash
    # Cursor用のMCPサーバーを設定
    ./scripts/setup_cursor_mcp.sh
+   ```
+
+   **Claude Code用の場合:**
+
+   ```bash
+   # 個別MCPサーバーをビルドして対話的に設定（推奨）
+   make reset-and-setup-claude-code
+
+   # または、リセットせずに追加設定
+   make setup-claude-code
+
+   # 既存の設定をリセットのみ
+   make reset-claude-code
+
+   # 設定済みMCPサーバーの確認
+   make list-claude-code-mcps
    ```
 
    これにより、以下の処理が行われます:
@@ -97,11 +118,26 @@
 
 ## Makefile コマンド
 
+### Claude Desktop / Cursor IDE 用
+
 - `make all` または `make`: デフォルトターゲット。`setup` ターゲットを実行します
 - `make setup`: 依存関係をインストールし、設定ファイルを生成して Claude デスクトップアプリの設定ディレクトリにコピーします
 - `make select-mcps`: インタラクティブにMCPサーバーを選択して設定します。必要な環境変数の設定も行えます
+- `make cursor-setup`: Cursor IDE用の設定ファイルをインストールします
+- `make cursor-interactive`: Cursor IDE用のインタラクティブセットアップを実行します
+
+### Claude Code 用
+
+- `make build-individual-mcps`: 個別MCPサーバーを`dist/`ディレクトリにビルドします
+- `make setup-claude-code`: Claude Code用MCPサーバーを対話的に設定します
+- `make reset-and-setup-claude-code`: 既存の設定をリセットしてから新規設定します（推奨）
+- `make reset-claude-code`: 既存のClaude Code MCP設定をリセットします
+- `make list-claude-code-mcps`: 現在設定されているMCPサーバーを一覧表示します
+
+### 共通
+
 - `make install`: 依存関係のみをインストールします
-- `make clean`: 生成された `claude_desktop_config.json` ファイルを削除します
+- `make clean`: 生成された設定ファイルとビルドファイルを削除します
 
 ## 設定ファイル
 
@@ -159,6 +195,59 @@ read_notes({"paths": ["Projects/新しいプロジェクト", "Daily/2025-04-12"
 delete_note({"path": "Projects/古いプロジェクト"})
 ```
 
+## Claude Code での使用方法
+
+Claude Code は**個別MCP管理**を採用しており、プロジェクトごとに必要なMCPサーバーのみを選択して使用できます。
+
+### MCP スコープについて
+
+Claude Code では3つのスコープがあります：
+
+1. **local**（デフォルト）: 現在のプロジェクトでのみ利用可能
+2. **project**: `.mcp.json`ファイルでチーム共有可能
+3. **user**: 全プロジェクトで利用可能
+
+### 基本的な使用フロー
+
+```bash
+# 1. 個別MCPサーバーをビルド
+make build-individual-mcps
+
+# 2. 既存設定をリセットして新規設定（推奨）
+make reset-and-setup-claude-code
+
+# 3. Claude Code内で動作確認
+claude code
+# Claude Code内で: /mcp
+```
+
+### Claude Code内での確認
+
+Claude Code内で以下のコマンドを使用してMCPサーバーの状態を確認できます：
+
+```
+/mcp
+```
+
+これにより、接続されているMCPサーバーの一覧と状態が表示されます。
+
+### プロジェクト共有での使用
+
+チームで共有したい場合は、`project`スコープを使用します：
+
+1. MCPセットアップ時に「project」スコープを選択
+2. 生成された`.mcp.json`ファイルをGitにコミット
+3. チームメンバーがプロジェクトをクローン後、Claude Codeが自動的にMCPサーバーを認識
+
+### トラブルシューティング（Claude Code）
+
+- **Claude CLIが見つからない**: Claude CLIが正しくインストールされているか確認
+- **MCPサーバーが接続されない**: `make list-claude-code-mcps`で設定を確認
+- **権限エラー**: Claude Codeの実行時にプロジェクトスコープのMCPを承認
+- **設定のリセット**: `make reset-claude-code`で全設定をクリア
+
+````
+
 ## MCP の開発と拡張
 
 このリポジトリに新しい MCP を追加する方法：
@@ -174,7 +263,7 @@ delete_note({"path": "Projects/古いプロジェクト"})
      param1: z.string().describe("パラメータ1の説明"),
      param2: z.number().optional().describe("オプションのパラメータ2"),
    });
-   ```
+````
 
 3. **ツール実装の追加**:
    `server.setRequestHandler()` 内でツールの動作を実装します。
