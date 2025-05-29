@@ -2,11 +2,25 @@
 
 import inquirer from "inquirer";
 import { spawn } from "child_process";
-import { readdir } from "fs/promises";
+import { readdir, readFile } from "fs/promises";
 import { join } from "path";
+import dotenv from "dotenv";
 
 const DIST_DIR = "./dist";
 const BASE_PATH = process.cwd();
+const ENV_PATH = join(BASE_PATH, ".env");
+
+// Load environment variables from .env file
+let envConfig = {};
+try {
+  const envContent = await readFile(ENV_PATH, "utf-8");
+  envConfig = dotenv.parse(envContent);
+  console.log("✅ Loaded environment variables from .env file\n");
+} catch (error) {
+  console.warn(
+    "⚠️  Could not load .env file. Some MCP servers may not work properly.\n"
+  );
+}
 
 async function getAvailableMCPs() {
   try {
@@ -22,18 +36,77 @@ async function getAvailableMCPs() {
   }
 }
 
+function getRequiredEnvVars(mcpName) {
+  const envRequirements = {
+    obsidian: ["OBSIDIAN_VAULT_DIR"],
+    github: ["GITHUB_TOKEN"],
+    "brave-search": ["BRAVE_API_KEY"],
+    fetch: ["CUSTOM_USER_AGENT"],
+    figma: ["FIGMA_API_KEY"],
+    supabase: ["SUPABASE_API_KEY"],
+  };
+
+  return envRequirements[mcpName] || [];
+}
+
 async function addMCPServer(name, scope = "local") {
   const serverPath = join(BASE_PATH, "dist", name, "index.ts");
 
-  const args = ["mcp", "add"];
+  const args = ["mcp", "add", name];
+
+  // Add environment variables based on MCP requirements
+  const requiredEnvVars = getRequiredEnvVars(name);
+  const envVarsToSet = {};
+
+  for (const envVar of requiredEnvVars) {
+    if (envConfig[envVar]) {
+      envVarsToSet[envVar] = envConfig[envVar];
+    }
+  }
+
+  // Add general environment variables that might be needed
+  if (envConfig.HOME_DIR) envVarsToSet.HOME_DIR = envConfig.HOME_DIR;
+  if (envConfig.BUN_PATH) envVarsToSet.BUN_PATH = envConfig.BUN_PATH;
+
+  // Build the final command with environment variables
+  if (Object.keys(envVarsToSet).length > 0) {
+    // Add all environment variables as a single -e flag with space-separated key=value pairs
+    // For spawn, we need to pass the complete env string as one argument
+    const envString = Object.entries(envVarsToSet)
+      .map(([key, value]) => `${key}=${value}`)
+      .join(" ");
+    args.push("-e", envString);
+  }
+
+  // Add scope if not local
   if (scope !== "local") {
     args.push("-s", scope);
   }
-  args.push(name, "bun", "run", serverPath);
+
+  args.push("bun", "run", serverPath);
 
   return new Promise((resolve, reject) => {
-    console.log(`🔧 Running: claude ${args.join(" ")}`);
-    const childProcess = spawn("claude", args, { stdio: "inherit" });
+    // Create display command with quoted values for logging
+    const displayArgs = [...args];
+    if (Object.keys(envVarsToSet).length > 0) {
+      // Find the -e argument and replace it with quoted version for display
+      const eIndex = displayArgs.findIndex(arg => arg === "-e");
+      if (eIndex !== -1 && eIndex + 1 < displayArgs.length) {
+        const quotedEnvString = Object.entries(envVarsToSet)
+          .map(([key, value]) => {
+            // Always quote values for display
+            return `${key}="${value}"`;
+          })
+          .join(" ");
+        displayArgs[eIndex + 1] = quotedEnvString;
+      }
+    }
+    
+    console.log(`🔧 Running: claude ${displayArgs.join(" ")}`);
+    const childProcess = spawn("claude", args, {
+      stdio: "inherit",
+      env: { ...process.env, ...envVarsToSet },
+    });
     childProcess.on("close", (code) => {
       if (code === 0) {
         resolve();
@@ -86,7 +159,43 @@ async function main() {
       return;
     }
 
-    // 3. Select scope
+    // 3. Check for missing environment variables
+    const missingEnvVars = [];
+
+    for (const mcpName of serverSelection.selectedMcps) {
+      const requiredVars = getRequiredEnvVars(mcpName);
+      for (const envVar of requiredVars) {
+        if (!envConfig[envVar]) {
+          missingEnvVars.push({ mcp: mcpName, envVar });
+        }
+      }
+    }
+
+    if (missingEnvVars.length > 0) {
+      console.log("\n⚠️  Missing environment variables detected:");
+      missingEnvVars.forEach(({ mcp, envVar }) => {
+        console.log(`   • ${mcp}: ${envVar}`);
+      });
+
+      const continueAnyway = await inquirer.prompt([
+        {
+          type: "confirm",
+          name: "proceed",
+          message:
+            "Some MCP servers may not work without these variables. Continue anyway?",
+          default: false,
+        },
+      ]);
+
+      if (!continueAnyway.proceed) {
+        console.log(
+          "❌ Setup cancelled. Please check your .env file and try again."
+        );
+        return;
+      }
+    }
+
+    // 4. Select scope
     const scopeSelection = await inquirer.prompt([
       {
         type: "list",
@@ -113,15 +222,22 @@ async function main() {
       },
     ]);
 
-    // 4. Confirm selection
-    console.log("\\n📋 Configuration Summary:");
+    // 5. Confirm selection
+    console.log("\n📋 Configuration Summary:");
     console.log(
       `   Selected servers: ${serverSelection.selectedMcps.join(", ")}`
     );
     console.log(`   Scope: ${scopeSelection.scope}`);
     console.log(
-      `   Total servers to add: ${serverSelection.selectedMcps.length}\\n`
+      `   Total servers to add: ${serverSelection.selectedMcps.length}`
     );
+
+    if (missingEnvVars.length > 0) {
+      console.log(
+        `   ⚠️  Servers with missing env vars: ${[...new Set(missingEnvVars.map((v) => v.mcp))].join(", ")}`
+      );
+    }
+    console.log("");
 
     const confirmation = await inquirer.prompt([
       {
@@ -137,8 +253,8 @@ async function main() {
       return;
     }
 
-    // 5. Add MCP servers
-    console.log("\\n⚡ Adding MCP servers to Claude Code...");
+    // 6. Add MCP servers
+    console.log("\n⚡ Adding MCP servers to Claude Code...");
 
     let successCount = 0;
     let errorCount = 0;
@@ -156,23 +272,25 @@ async function main() {
       }
     }
 
-    // 6. Show results
-    console.log("\\n🎉 Setup complete!");
+    // 7. Show results
+    console.log("\n🎉 Setup complete!");
     console.log(`✅ Successfully added: ${successCount}`);
     if (errorCount > 0) {
       console.log(`❌ Failed to add: ${errorCount}`);
-      console.log("\\n❌ Failed servers:");
+      console.log("\n❌ Failed servers:");
       errors.forEach(({ name, error }) => {
         console.log(`   • ${name}: ${error}`);
       });
     }
 
-    console.log("\\n💡 Next steps:");
+    console.log("\n💡 Next steps:");
     console.log("   • Check status with: claude code -> /mcp");
     console.log("   • Or run: make list-claude-code-mcps");
 
     if (scopeSelection.scope === "project") {
-      console.log("   • Commit changes to .mcp.json to share with your team");
+      console.log(
+        "   • Don't forget to commit .mcp.json to version control for team sharing"
+      );
     }
   } catch (error) {
     console.error("❌ Setup failed:", error);
