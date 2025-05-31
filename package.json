@@ -9,9 +9,12 @@
     "setup": "make setup"
   },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.1",
     "dotenv": "^16.4.5",
     "inquirer": "^12.5.2",
-    "minimist": "^1.2.8"
+    "minimist": "^1.2.8",
+    "puppeteer": "^24.9.0",
+    "zod": "^3.25.42"
   },
   "engines": {
     "bun": ">=1.0.0"
