@@ -112,6 +112,41 @@ list-claude-code-mcps:
 	@echo "📋 Current Claude Code MCP servers:"
 	@claude mcp list 2>/dev/null || echo "❌ No Claude Code MCPs configured or Claude Code not available"
 
+# Generate Claude Code MCP commands for copy-paste
+generate-claude-commands: build-individual-mcps
+	@echo "📋 Generating Claude Code MCP commands (local scope)..."
+	@bun run scripts/generate-claude-code-commands.mjs local bash
+
+# Generate Claude Code MCP commands for project scope
+generate-claude-commands-project: build-individual-mcps
+	@echo "📋 Generating Claude Code MCP commands (project scope)..."
+	@bun run scripts/generate-claude-code-commands.mjs project bash
+
+# Generate Claude Code MCP commands for user scope
+generate-claude-commands-user: build-individual-mcps
+	@echo "📋 Generating Claude Code MCP commands (user scope)..."
+	@bun run scripts/generate-claude-code-commands.mjs user bash
+
+# Generate Claude Code MCP commands in markdown format
+generate-claude-commands-md: build-individual-mcps
+	@echo "📋 Generating Claude Code MCP commands (markdown)..."
+	@bun run scripts/generate-claude-code-commands.mjs local markdown
+
+# Generate Claude Code MCP commands in JSON format
+generate-claude-commands-json: build-individual-mcps
+	@echo "📋 Generating Claude Code MCP commands (JSON)..."
+	@bun run scripts/generate-claude-code-commands.mjs local json
+
+# Save commands to file for easy copy-paste
+save-claude-commands: build-individual-mcps
+	@echo "💾 Saving Claude Code MCP commands to file..."
+	@bun run scripts/generate-claude-code-commands.mjs local bash > claude-mcp-setup.sh
+	@chmod +x claude-mcp-setup.sh
+	@echo "✅ Commands saved to claude-mcp-setup.sh"
+	@echo "💡 Run: ./claude-mcp-setup.sh"
+
 # Phony targets prevent conflicts with files of the same name
 .PHONY: all setup select-mcps install clean cursor-setup cursor-interactive cursor-config \
-        build-individual-mcps setup-claude-code reset-and-setup-claude-code reset-claude-code list-claude-code-mcps
+        build-individual-mcps setup-claude-code reset-and-setup-claude-code reset-claude-code list-claude-code-mcps \
+        generate-claude-commands generate-claude-commands-project generate-claude-commands-user \
+        generate-claude-commands-md generate-claude-commands-json save-claude-commands
