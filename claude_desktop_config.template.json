@@ -53,6 +53,16 @@
       "disabled": false,
       "autoApprove": []
     },
+    "awslabs.aws-pricing-mcp-server": {
+      "command": "{{UVX_PATH}}",
+      "args": ["awslabs.aws-pricing-mcp-server@latest"],
+      "env": {
+        "FASTMCP_LOG_LEVEL": "ERROR",
+        "AWS_REGION": "us-east-1"
+      },
+      "disabled": false,
+      "autoApprove": []
+    },
     "supabase": {
       "command": "{{NPX_PATH}}",
       "args": [
